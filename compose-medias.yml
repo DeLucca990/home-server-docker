@@ -9,7 +9,7 @@ services:
       - GIDLIST=109
     volumes:
       - ./config/jellyfin:/config
-      - /home/ubuntu/media:/media
+      - /home/ubuntu/media/library:/media/library
     ports:
       - 8096:8096
     devices:
@@ -24,11 +24,14 @@ services:
       - PGID=1000
       - TZ=America/Sao_Paulo
       - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
     volumes:
       - ./config/qbittorrent:/config
-      - /home/ubuntu/media:/media
+      - /home/ubuntu/media/torrents:/media/torrents
     ports:
       - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
     restart: unless-stopped
 
   prowlarr:
@@ -81,7 +84,20 @@ services:
       - TZ=America/Sao_Paulo
     volumes:
       - ./config/bazarr:/config
-      - /home/ubuntu/media:/media
+      - /home/ubuntu/media/library:/media/library
     ports:
       - 6767:6767
     restart: unless-stopped
+
+  # Optional: bypass cloudfalre protection, good for some torrents
+  # Consumes ~200-400 MB of RAM
+  #
+  # flaresolverr:
+  #   image: ghcr.io/flaresolverr/flaresolverr:latest
+  #   container_name: flaresolverr
+  #   environment:
+  #     - LOG_LEVEL=info
+  #     - TZ=America/Sao_Paulo
+  #   ports:
+  #     - 8191:8191
+  #   restart: unless-stopped
