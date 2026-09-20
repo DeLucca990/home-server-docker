@@ -88,16 +88,3 @@ services:
     ports:
       - 6767:6767
     restart: unless-stopped
-
-  # Optional: bypass cloudfalre protection, good for some torrents
-  # Consumes ~200-400 MB of RAM
-  #
-  # flaresolverr:
-  #   image: ghcr.io/flaresolverr/flaresolverr:latest
-  #   container_name: flaresolverr
-  #   environment:
-  #     - LOG_LEVEL=info
-  #     - TZ=America/Sao_Paulo
-  #   ports:
-  #     - 8191:8191
-  #   restart: unless-stopped
