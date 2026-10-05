@@ -19,7 +19,7 @@ Follow this order — each step depends on the previous one.
 |---|---|---|
 | 0 | Folders, permissions, networking | [00-before-you-start.md](00-before-you-start.md) |
 | 1 | qBittorrent — paths, categories, exclusions | [01-qbittorrent.md](01-qbittorrent.md) |
-| 2 | Prowlarr part 1 — auth + indexers | [02-prowlarr-indexers.md](02-prowlarr-indexers.md) |
+| 2 | Prowlarr part 1 — auth + indexers (+ FlareSolverr) | [02-prowlarr-indexers.md](02-prowlarr-indexers.md) |
 | 3 | Radarr | [03-radarr.md](03-radarr.md) |
 | 4 | Sonarr | [04-sonarr.md](04-sonarr.md) |
 | 5 | Prowlarr part 2 — sync the apps | [05-prowlarr-apps.md](05-prowlarr-apps.md) |
@@ -49,3 +49,4 @@ never `localhost` or `127.0.0.1`.
 | Sonarr | `sonarr` | 8989 |
 | Bazarr | `bazarr` | 6767 |
 | Jellyfin | `jellyfin` | 8096 |
+| FlareSolverr *([2.3](02-prowlarr-indexers.md#23-flaresolverr-optional))* | `flaresolverr` | 8191 |

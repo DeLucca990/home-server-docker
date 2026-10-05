@@ -37,6 +37,7 @@ The layout expected by this guide:
 | jellyfin | `/home/ubuntu/media/library` | `/media/library` |
 | bazarr | `/home/ubuntu/media/library` | `/media/library` |
 | prowlarr | — | — (never touches files) |
+| flaresolverr | — | — (never touches files) |
 
 Two properties make this work:
 
@@ -75,6 +76,7 @@ address points at the container itself, not at the Docker host.
 | Sonarr | `sonarr` | 8989 |
 | Bazarr | `bazarr` | 6767 |
 | Jellyfin | `jellyfin` | 8096 |
+| FlareSolverr *([2.3](02-prowlarr-indexers.md#23-flaresolverr-optional))* | `flaresolverr` | 8191 |
 
 Note that `compose-utils.yml` is a **separate stack with its own network**, so Uptime Kuma must
 monitor these services by `http://SERVER_IP:<port>`, not by service name.
@@ -82,7 +84,7 @@ monitor these services by `http://SERVER_IP:<port>`, not by service name.
 ## 0.4 Configuration order
 
 1. [qBittorrent](01-qbittorrent.md) — paths, categories, exclusions
-2. [Prowlarr — part 1](02-prowlarr-indexers.md) — authentication + indexers
+2. [Prowlarr — part 1](02-prowlarr-indexers.md) — authentication + indexers (+ FlareSolverr, only if an indexer needs it)
 3. [Radarr](03-radarr.md) — needs qBittorrent ready
 4. [Sonarr](04-sonarr.md) — same
 5. [Prowlarr — part 2](05-prowlarr-apps.md) — Apps; needs the Radarr/Sonarr API keys

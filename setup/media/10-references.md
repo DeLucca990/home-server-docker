@@ -7,6 +7,11 @@
 - [Radarr Quick Start](https://wiki.servarr.com/radarr/quick-start-guide)
 - [Sonarr Quick Start](https://wiki.servarr.com/sonarr/quick-start-guide)
 - [Docker Guide](https://wiki.servarr.com/docker-guide)
+- [Prowlarr Settings — Indexer Proxies](https://wiki.servarr.com/prowlarr/settings#indexer-proxies)
+
+## FlareSolverr
+
+- [FlareSolverr on GitHub](https://github.com/FlareSolverr/FlareSolverr)
 
 ## Bazarr
 

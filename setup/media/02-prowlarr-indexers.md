@@ -62,9 +62,25 @@ If either test fails with a Cloudflare error, that is what FlareSolverr below is
 
 ## 2.3 FlareSolverr (optional)
 
-Indexers behind Cloudflare need a solver. **It is not part of `compose-medias.yml`** — the
-commented-out block was removed deliberately (it costs ~200–400 MB of RAM). Add it back only if
-an indexer you actually use requires it:
+Some indexers sit behind Cloudflare's anti-bot page ("Checking your browser…"). Prowlarr cannot
+pass that challenge on its own, so the indexer test fails. [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr)
+is a small proxy that opens the page in a headless Chromium, solves the challenge and hands the
+cookies back to Prowlarr.
+
+The container is already part of `compose-medias.yml` and starts with the rest of the stack
+(the headless browser costs ~200–400 MB of RAM). What is optional is wiring it into Prowlarr —
+do that only for indexers that actually need it. Typical signs:
+
+- the indexer test fails with a message mentioning Cloudflare, or a `403` / `503` error
+- Prowlarr's logs (`System → Logs`) show `Cloudflare protection detected`
+- the indexer's site opens in a normal browser only after the "Checking your browser" screen
+
+### 2.3.1 The container
+
+It lives in **`compose-medias.yml`**, in the same file as Prowlarr, so that the `flaresolverr`
+hostname resolves on the Compose network (see
+[0.3](00-before-you-start.md#03-container-to-container-communication)). Moving it to
+`compose-utils.yml` would break that.
 
 ```yaml
   flaresolverr:
@@ -73,17 +89,88 @@ an indexer you actually use requires it:
     environment:
       - LOG_LEVEL=info
       - TZ=America/Sao_Paulo
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     ports:
       - 8191:8191
     restart: unless-stopped
 ```
 
-Then in `Settings → Indexer Proxies → + → FlareSolverr`:
+`dns` makes the container resolve names through Cloudflare (`1.1.1.1`) with Google (`8.8.8.8`)
+as fallback, instead of the host's resolver — which is usually the ISP's DNS via the router.
+ISP resolvers commonly block or hijack torrent sites, and a blocked lookup surfaces as a
+FlareSolverr timeout or a generic connection error rather than a clear DNS failure.
 
-- **Host**: `http://flaresolverr:8191`
-- **Tags**: `flaresolverr`
+The port is published on `127.0.0.1` only. Prowlarr reaches FlareSolverr over the Compose network
+and does not need it published at all; the localhost binding exists just so you can test it from
+the server itself. FlareSolverr has **no authentication**, so do not expose it to the LAN or the
+tailnet.
 
-Apply the `flaresolverr` tag to the indexers that need it.
+It comes up with `docker compose -f compose-medias.yml up -d`. If the rest of the stack is already
+running, starting just this one is enough:
+
+```bash
+docker compose -f compose-medias.yml up -d flaresolverr
+```
+
+Check that it is up:
+
+```bash
+docker logs flaresolverr        # should end with "Serving on http://0.0.0.0:8191"
+curl http://127.0.0.1:8191/     # {"msg": "FlareSolverr is ready!", ...}
+docker exec flaresolverr cat /etc/resolv.conf   # nameserver 127.0.0.11 is expected (see below)
+```
+
+`resolv.conf` showing `127.0.0.11` is normal: that is Docker's embedded resolver, which answers
+service names like `prowlarr` and forwards everything else to `1.1.1.1` / `8.8.8.8`.
+
+### 2.3.2 Register it in Prowlarr
+
+`Settings → Indexers → Indexer Proxies → + → FlareSolverr`
+
+| Field | Value |
+|---|---|
+| **Name** | `FlareSolverr` |
+| **Tags** | `flaresolverr` |
+| **Host** | `http://flaresolverr:8191/` |
+| **Request Timeout** | `60` (default; raise it if solves time out on a slow server) |
+
+Hit **Test**, then **Save**.
+
+### 2.3.3 Tag the indexers that need it
+
+The proxy is **only used by indexers that carry the same tag**. A FlareSolverr proxy whose tag
+matches no indexer does nothing.
+
+`Indexers →` click the indexer `→ Tags → flaresolverr → Test → Save`
+
+Tag only the indexers that are actually behind Cloudflare. Every request through FlareSolverr
+spins up a browser page, which is slower and heavier than a plain HTTP request, and Prowlarr only
+hands a request to it when it detects a Cloudflare challenge anyway.
+
+> **Tags also filter app sync.** In Prowlarr, if an app in `Settings → Apps` has tags, only
+> indexers with a matching tag are synced to it. The apps in [step 5](05-prowlarr-apps.md) are
+> added without tags, so the `flaresolverr` tag does not affect syncing — keep it that way, or
+> add the same tag to the app as well.
+
+### 2.3.4 Limitations
+
+- FlareSolverr solves Cloudflare's JavaScript challenge. It **cannot** solve interactive captchas
+  (Turnstile checkbox, hCaptcha). If an indexer shows one of those, FlareSolverr will not help —
+  look for a mirror or a different indexer.
+- Cloudflare changes its challenge regularly, and FlareSolverr breaks from time to time until a
+  new release ships. If a previously working indexer starts failing, update first:
+  `docker compose -f compose-medias.yml pull flaresolverr && docker compose -f compose-medias.yml up -d flaresolverr`.
+
+### 2.3.5 Removing it
+
+If no indexer needs it and you want the RAM back: remove the tag from the indexers, delete the
+proxy in Prowlarr, delete the `flaresolverr` block from `compose-medias.yml` and run:
+
+```bash
+docker compose -f compose-medias.yml up -d --remove-orphans
+```
 
 ## 2.4 Download clients in Prowlarr
 

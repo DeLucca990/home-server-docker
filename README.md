@@ -12,6 +12,7 @@
 | [Radarr](https://radarr.video/)             | Movie management and automation     | `7878` |
 | [Sonarr](https://sonarr.tv/)                | TV series management and automation | `8989` |
 | [Bazarr](https://www.bazarr.media/)         | Subtitle management and automation  | `6767` |
+| [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | Cloudflare challenge solver for Prowlarr | `8191` (localhost only) |
 
 #### Utils Stack
 
