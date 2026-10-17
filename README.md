@@ -43,42 +43,64 @@ Media files are stored outside this repository:
 
 ```text
 /home/ubuntu/media/
-├── downloads/
-├── movies/
-└── series/
+├── torrents/          # downloads (qBittorrent)
+│   ├── movies/
+│   ├── tv/
+│   └── incomplete/
+└── library/           # final library (Radarr/Sonarr write, Jellyfin reads)
+    ├── movies/
+    └── tv/
+```
+
+Create it with:
+
+```bash
+mkdir -p /home/ubuntu/media/{torrents/{movies,tv,incomplete},library/{movies,tv}}
+sudo chown -R 1000:1000 /home/ubuntu/media
+chmod -R 775 /home/ubuntu/media
 ```
 
 ## Media Storage
 
-All media-related containers use the same host directory:
+Each container mounts only the part of `/home/ubuntu/media` it needs, but always under the same container path:
 
-```text
-/home/ubuntu/media → /media
-```
+| Service     | Host path                     | Container path    |
+| ----------- | ----------------------------- | ----------------- |
+| Radarr      | `/home/ubuntu/media`          | `/media`          |
+| Sonarr      | `/home/ubuntu/media`          | `/media`          |
+| qBittorrent | `/home/ubuntu/media/torrents` | `/media/torrents` |
+| Jellyfin    | `/home/ubuntu/media/library`  | `/media/library`  |
+| Bazarr      | `/home/ubuntu/media/library`  | `/media/library`  |
 
-This consistent path is intentional and allows Radarr, Sonarr, qBittorrent, Bazarr, and Jellyfin to reference the same files using the same container path.
+Because the path strings match, a file qBittorrent saves as `/media/torrents/movies/x.mkv` has that exact path inside Radarr too, so no path mapping is needed anywhere in the stack.
 
-It also allows the use of **hardlinks** between downloaded files and the final media library without unnecessarily duplicating the file data on disk.
+Radarr and Sonarr mount the whole tree as a single `/media` volume, so `torrents/` and `library/` are on the same filesystem from their point of view. This allows them to import using **hardlinks** instead of copying the file data on disk.
 
 For example:
 
 ```text
-/media/downloads/movies/movie.mkv
-/media/movies/Movie (2026)/Movie (2026).mkv
+/media/torrents/movies/Movie.2026.1080p.BluRay.mkv
+/media/library/movies/Movie (2026) [tmdbid-12345]/Movie (2026) [tmdbid-12345] - [Bluray-1080p].mkv
 ```
 
-Both paths can reference the same physical file through a hardlink.
+Both paths reference the same physical file through a hardlink.
 
 ### Root Folders
 
-The recommended root folders inside the containers are:
+The root folders inside the containers are:
 
 ```text
-Radarr → /media/movies
-Sonarr → /media/series
-Jellyfin → /media/movies
-Jellyfin → /media/series
+Radarr               → /media/library/movies
+Sonarr               → /media/library/tv
+Jellyfin (Movies)    → /media/library/movies
+Jellyfin (Shows)     → /media/library/tv
+qBittorrent (radarr) → /media/torrents/movies
+qBittorrent (sonarr) → /media/torrents/tv
 ```
+
+Never point a Jellyfin library at `/media/library` as a whole; keep movies and TV as separate libraries.
+
+See [setup/media/00-before-you-start.md](setup/media/00-before-you-start.md) for the full explanation.
 
 ## Network
 
