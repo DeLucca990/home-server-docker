@@ -22,6 +22,12 @@ services:
         target: 8096
     devices:
       - /dev/dri:/dev/dri
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
 
   qbittorrent:
@@ -57,6 +63,12 @@ services:
         published: "6881"
         target: 6881
         protocol: udp
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
 
   prowlarr:
@@ -78,6 +90,12 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
 
   radarr:
@@ -97,6 +115,12 @@ services:
       - host_ip: *lan-address
         published: "7878"
         target: 7878
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
 
   sonarr:
@@ -116,6 +140,12 @@ services:
       - host_ip: *lan-address
         published: "8989"
         target: 8989
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
 
   bazarr:
@@ -135,6 +165,12 @@ services:
       - host_ip: *lan-address
         published: "6767"
         target: 6767
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
 
   flaresolverr:
@@ -148,4 +184,10 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
