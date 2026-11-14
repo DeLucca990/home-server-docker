@@ -144,12 +144,7 @@ services:
       - LOG_LEVEL=info
       - TZ=America/Sao_Paulo
     ports:
-      - host_ip: *loopback-address
-        published: "8191"
-        target: 8191
-      - host_ip: *lan-address
-        published: "8191"
-        target: 8191
+      - 8191:8191
     dns:
       - 1.1.1.1
       - 8.8.8.8
