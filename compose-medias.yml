@@ -49,20 +49,6 @@ services:
       - host_ip: *lan-address
         published: "8080"
         target: 8080
-      - host_ip: *loopback-address
-        published: "6881"
-        target: 6881
-      - host_ip: *lan-address
-        published: "6881"
-        target: 6881
-      - host_ip: *loopback-address
-        published: "6881"
-        target: 6881
-        protocol: udp
-      - host_ip: *lan-address
-        published: "6881"
-        target: 6881
-        protocol: udp
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/"]
       interval: 60s
