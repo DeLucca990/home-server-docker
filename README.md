@@ -85,6 +85,20 @@ For example:
 
 Both paths reference the same physical file through a hardlink.
 
+## Host binding
+
+The media stack binds its published ports to both loopback and the LAN address, so local clients
+can connect directly while Tailscale Serve uses the loopback listener without conflicting with
+Docker. The addresses are defined once at the top of `compose-medias.yml`:
+
+```yaml
+x-loopback-address: &loopback-address 127.0.0.1
+x-lan-address: &lan-address 192.168.1.50
+```
+
+Change `&lan-address` to the server's actual LAN IP. Services can then be reached through
+Tailscale Serve or directly from the LAN.
+
 ### Root Folders
 
 The root folders inside the containers are:

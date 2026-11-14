@@ -80,8 +80,8 @@ that the client is not being overridden by another VPN or a custom DNS setting.
 | Portainer | `https://home-server:9443` |
 | Uptime Kuma | `http://home-server:3001` |
 
-These work identically at home and away — the same name resolves to the LAN path when you are on
-the same network and to the encrypted tunnel when you are not.
+These work identically at home and away through the encrypted tailnet. At home, devices that do
+not run Tailscale can use the server's LAN address directly.
 
 If you set up HTTPS in
 [1.6](01-tailscale-server.md#16-https-on-the-existing-ports-optional-but-recommended), the port
@@ -95,8 +95,7 @@ https://home-server.<tailnet>.ts.net:7878     # Radarr
 
 **Jellyfin apps** (mobile, TV, desktop): add the server as `http://home-server:8096`, or as
 `https://home-server.<tailnet>.ts.net:8096` once it is served over TLS. Note that a TV or
-streaming stick that cannot run Tailscale will not reach either address — those devices stay on
-the LAN and should use the server's local IP.
+streaming stick that cannot run Tailscale can use the server's LAN address directly.
 
 ## 2.7 Subnet routes and exit node
 
@@ -124,7 +123,7 @@ While an exit node is selected, *all* of that device's traffic goes through your
 | Certificate warning on `https://home-server:8096` | the cert is issued for the full `ts.net` name | use `https://home-server.<tailnet>.ts.net:8096` |
 | `http://home-server:8096` broke after enabling HTTPS | that port now terminates TLS over the tailnet | switch the bookmark to `https://` + the full name |
 | Jellyfin logs every user as `127.0.0.1` | `tailscale serve` is the proxy | add `127.0.0.1` to Jellyfin's Known proxies ([1.6](01-tailscale-server.md#16-https-on-the-existing-ports-optional-but-recommended)) |
-| Can reach the server, but not from a TV app | the TV cannot run Tailscale | use the LAN IP at home, or put a Tailscale-capable device in front |
+| Can reach the server, but not from a TV app | the TV cannot run Tailscale | use the server's LAN address, or update `&lan-address` in `compose-medias.yml` |
 | Two VPNs fighting on mobile | the OS allows one VPN profile at a time | disconnect the other one |
 
 ---

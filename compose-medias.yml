@@ -1,3 +1,6 @@
+x-loopback-address: &loopback-address 127.0.0.1
+x-lan-address: &lan-address your.lan.ip.address (access running "ifconfig" command)
+
 services:
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
@@ -11,7 +14,12 @@ services:
       - ./config/jellyfin:/config
       - /home/ubuntu/media/library:/media/library
     ports:
-      - 8096:8096
+      - host_ip: *loopback-address
+        published: "8096"
+        target: 8096
+      - host_ip: *lan-address
+        published: "8096"
+        target: 8096
     devices:
       - /dev/dri:/dev/dri
     restart: unless-stopped
@@ -29,9 +37,26 @@ services:
       - ./config/qbittorrent:/config
       - /home/ubuntu/media/torrents:/media/torrents
     ports:
-      - 8080:8080
-      - 6881:6881
-      - 6881:6881/udp
+      - host_ip: *loopback-address
+        published: "8080"
+        target: 8080
+      - host_ip: *lan-address
+        published: "8080"
+        target: 8080
+      - host_ip: *loopback-address
+        published: "6881"
+        target: 6881
+      - host_ip: *lan-address
+        published: "6881"
+        target: 6881
+      - host_ip: *loopback-address
+        published: "6881"
+        target: 6881
+        protocol: udp
+      - host_ip: *lan-address
+        published: "6881"
+        target: 6881
+        protocol: udp
     restart: unless-stopped
 
   prowlarr:
@@ -44,7 +69,12 @@ services:
     volumes:
       - ./config/prowlarr:/config
     ports:
-      - 9696:9696
+      - host_ip: *loopback-address
+        published: "9696"
+        target: 9696
+      - host_ip: *lan-address
+        published: "9696"
+        target: 9696
     dns:
       - 1.1.1.1
       - 8.8.8.8
@@ -61,7 +91,12 @@ services:
       - ./config/radarr:/config
       - /home/ubuntu/media:/media
     ports:
-      - 7878:7878
+      - host_ip: *loopback-address
+        published: "7878"
+        target: 7878
+      - host_ip: *lan-address
+        published: "7878"
+        target: 7878
     restart: unless-stopped
 
   sonarr:
@@ -75,7 +110,12 @@ services:
       - ./config/sonarr:/config
       - /home/ubuntu/media:/media
     ports:
-      - 8989:8989
+      - host_ip: *loopback-address
+        published: "8989"
+        target: 8989
+      - host_ip: *lan-address
+        published: "8989"
+        target: 8989
     restart: unless-stopped
 
   bazarr:
@@ -89,7 +129,12 @@ services:
       - ./config/bazarr:/config
       - /home/ubuntu/media/library:/media/library
     ports:
-      - 6767:6767
+      - host_ip: *loopback-address
+        published: "6767"
+        target: 6767
+      - host_ip: *lan-address
+        published: "6767"
+        target: 6767
     restart: unless-stopped
 
   flaresolverr:
@@ -99,7 +144,12 @@ services:
       - LOG_LEVEL=info
       - TZ=America/Sao_Paulo
     ports:
-      - 8191:8191
+      - host_ip: *loopback-address
+        published: "8191"
+        target: 8191
+      - host_ip: *lan-address
+        published: "8191"
+        target: 8191
     dns:
       - 1.1.1.1
       - 8.8.8.8

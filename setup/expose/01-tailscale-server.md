@@ -1,7 +1,7 @@
 # 1. Tailscale on the Server
 
-Ubuntu Server, alongside the running Docker stacks. Nothing in `compose-medias.yml` or
-`compose-utils.yml` needs to change.
+Ubuntu Server, alongside the running Docker stacks. The media stack binds its published ports to
+loopback so it can coexist with Tailscale Serve.
 
 ---
 
@@ -67,8 +67,8 @@ Find your tailnet name at the top of the DNS page in the admin console — it lo
 
 ## 1.5 Reaching the Docker services
 
-Every container already publishes its port on the host, and Tailscale runs on the host — so the
-services are reachable over the tailnet immediately, no Compose change required:
+The media stack publishes its ports on both loopback and the LAN address. Use Tailscale Serve to
+proxy the loopback listener to the tailnet address:
 
 | Service | Over Tailscale |
 |---|---|
@@ -81,8 +81,8 @@ services are reachable over the tailnet immediately, no Compose change required:
 | Portainer | `https://home-server:9443` |
 | Uptime Kuma | `http://home-server:3001` |
 
-These are plain HTTP over the encrypted tunnel, which is fine for a private tailnet. To get real
-certificates on the *same* port numbers, see [1.6](#16-https-on-the-existing-ports-optional-but-recommended).
+These are plain HTTP over the encrypted tunnel, which is fine for a private tailnet. Configure
+the proxy commands in [1.6](#16-https-on-the-existing-ports-optional-but-recommended).
 
 > The container-to-container hostnames from the setup guide (`radarr`, `qbittorrent`, …) are
 > unrelated to this and keep working exactly as before — they are internal to the Compose
@@ -135,9 +135,8 @@ Three consequences worth knowing before you run these:
   in the browser. `https://home-server:8096` will not do — use the FQDN.
 - **That port speaks TLS over the tailnet from now on.** Plain `http://home-server:8096` stops
   working once 8096 is served; it is one port, one protocol.
-- **LAN access is unaffected.** `serve` only intercepts traffic addressed to the node's Tailscale
-  address, so `http://192.168.1.x:8096` from inside the house still hits Docker's published port
-  directly.
+- **LAN access remains direct.** The LAN listener is configured by `&lan-address` in the
+  `x-lan-address` configuration at the top of `compose-medias.yml`.
 
 Managing it:
 
