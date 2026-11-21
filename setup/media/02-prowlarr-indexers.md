@@ -84,20 +84,26 @@ hostname resolves on the Compose network (see
 
 ```yaml
   flaresolverr:
+    <<: *common
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     environment:
-      - LOG_LEVEL=info
-      - TZ=America/Sao_Paulo
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
+      LOG_LEVEL: info
+      TZ: ${TZ:-America/Sao_Paulo}
     ports:
       - host_ip: *loopback-address
         published: "8191"
         target: 8191
-    restart: unless-stopped
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
 ```
+
+`*common` (restart policy) and `*healthcheck` (check timings) are shared blocks defined at the
+top of the file.
 
 `dns` makes the container resolve names through Cloudflare (`1.1.1.1`) with Google (`8.8.8.8`)
 as fallback, instead of the host's resolver — which is usually the ISP's DNS via the router.

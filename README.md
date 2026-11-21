@@ -25,6 +25,7 @@
 
 ```text
 .
+├── .env.example
 ├── compose-medias.yml
 ├── compose-utils.yml
 ├── config/
@@ -41,13 +42,6 @@
 ```
 
 Persistent application data is stored under the `config/` directory.
-
-## Setup Guides
-
-| Guide | Covers |
-| ----- | ------ |
-| [Media stack setup](setup/media/README.md) | First-run configuration of qBittorrent, Prowlarr, Radarr, Sonarr, Bazarr and Jellyfin, in order |
-| [Remote access](setup/expose/README.md) | Reaching the server from outside the house through Tailscale, over HTTPS |
 
 Media files are stored outside this repository:
 
@@ -69,6 +63,28 @@ mkdir -p /home/ubuntu/media/{torrents/{movies,tv,incomplete},library/{movies,tv}
 sudo chown -R 1000:1000 /home/ubuntu/media
 chmod -R 775 /home/ubuntu/media
 ```
+
+## Environment Variables
+
+`compose-medias.yml` reads these variables, with defaults that match the paths used throughout
+this README:
+
+| Variable | Default | Used for |
+| -------- | ------- | -------- |
+| `PUID` / `PGID` | `1000` | user and group the LinuxServer containers run as |
+| `TZ` | `America/Sao_Paulo` | container time zone |
+| `MEDIA_ROOT` | `/home/ubuntu/media` | host path of the media tree |
+
+To change any of them, copy `.env.example` to `.env` next to the Compose files and edit it;
+Compose loads `.env` automatically. Without `.env`, the defaults apply. If you change `PUID`,
+`PGID` or `MEDIA_ROOT`, adjust the `mkdir` and `chown` commands above to match.
+
+## Setup Guides
+
+| Guide | Covers |
+| ----- | ------ |
+| [Media stack setup](setup/media/README.md) | First-run configuration of qBittorrent, Prowlarr, Radarr, Sonarr, Bazarr and Jellyfin, in order |
+| [Remote access](setup/expose/README.md) | Reaching the server from outside the house through Tailscale, over HTTPS |
 
 ## Media Storage
 
@@ -344,10 +360,11 @@ A heartbeat interval of 60 seconds is a reasonable starting point.
 
 ## Restart Policy
 
-All services use:
+All services get it from the `x-common` block at the top of each Compose file:
 
 ```yaml
-restart: unless-stopped
+x-common: &common
+  restart: unless-stopped
 ```
 
 This ensures containers are automatically restarted after a Docker daemon restart or server reboot, unless they were explicitly stopped.

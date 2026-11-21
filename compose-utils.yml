@@ -3,8 +3,12 @@ name: utils
 x-loopback-address: &loopback-address 127.0.0.1
 x-lan-address: &lan-address your.lan.ip.address (access running "ifconfig" command)
 
+x-common: &common
+  restart: unless-stopped
+
 services:
   portainer:
+    <<: *common
     image: portainer/portainer-ce:latest
     container_name: portainer
     ports:
@@ -12,9 +16,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
-    restart: unless-stopped
 
   uptime-kuma:
+    <<: *common
     image: louislam/uptime-kuma:latest
     container_name: uptime-kuma
     volumes:
@@ -26,7 +30,6 @@ services:
       - host_ip: *lan-address
         published: "3001"
         target: 3001
-    restart: unless-stopped
 
 volumes:
   portainer_data:
