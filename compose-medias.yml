@@ -51,6 +51,8 @@ services:
       - host_ip: *lan-address
         published: "8080"
         target: 8080
+      - 6881:6881
+      - 6881:6881/udp
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/"]
       interval: 60s
