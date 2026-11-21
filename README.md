@@ -27,17 +27,27 @@
 .
 ├── compose-medias.yml
 ├── compose-utils.yml
-└── config/
-    ├── jellyfin/
-    ├── qbittorrent/
-    ├── prowlarr/
-    ├── radarr/
-    ├── sonarr/
-    ├── bazarr/
-    └── uptime-kuma/
+├── config/
+│   ├── jellyfin/
+│   ├── qbittorrent/
+│   ├── prowlarr/
+│   ├── radarr/
+│   ├── sonarr/
+│   ├── bazarr/
+│   └── uptime-kuma/
+└── setup/
+    ├── media/         # first-run configuration of each Web UI
+    └── expose/        # remote access through Tailscale
 ```
 
 Persistent application data is stored under the `config/` directory.
+
+## Setup Guides
+
+| Guide | Covers |
+| ----- | ------ |
+| [Media stack setup](setup/media/README.md) | First-run configuration of qBittorrent, Prowlarr, Radarr, Sonarr, Bazarr and Jellyfin, in order |
+| [Remote access](setup/expose/README.md) | Reaching the server from outside the house through Tailscale, over HTTPS |
 
 Media files are stored outside this repository:
 
@@ -85,29 +95,6 @@ For example:
 
 Both paths reference the same physical file through a hardlink.
 
-## Host binding
-
-The Web UIs that sit behind Tailscale Serve — the whole media stack and Uptime Kuma — bind their
-published ports to both loopback and the LAN address, so local clients can connect directly while
-Tailscale Serve uses the loopback listener without conflicting with Docker. The addresses are
-defined at the top of both `compose-medias.yml` and `compose-utils.yml`:
-
-```yaml
-x-loopback-address: &loopback-address 127.0.0.1
-x-lan-address: &lan-address 192.168.1.50
-```
-
-Change `&lan-address` to the server's actual LAN IP in both files. Services can then be reached
-through Tailscale Serve or directly from the LAN.
-
-Three ports are bound differently on purpose:
-
-| Port | Binding | Why |
-| ---- | ------- | --- |
-| Portainer `9443` | every interface | terminates its own TLS and is not put behind Tailscale Serve, so the tailnet reaches it directly |
-| qBittorrent `6881` | every interface | torrent port, reached by peers on the internet |
-| FlareSolverr `8191` | loopback only | no authentication; Prowlarr uses the Compose network |
-
 ### Root Folders
 
 The root folders inside the containers are:
@@ -124,6 +111,32 @@ qBittorrent (sonarr) → /media/torrents/tv
 Never point a Jellyfin library at `/media/library` as a whole; keep movies and TV as separate libraries.
 
 See [setup/media/00-before-you-start.md](setup/media/00-before-you-start.md) for the full explanation.
+
+## Host binding
+
+The Web UIs that sit behind Tailscale Serve — the whole media stack and Uptime Kuma — bind their
+published ports to both loopback and the LAN address, so local clients can connect directly while
+Tailscale Serve uses the loopback listener without conflicting with Docker. The addresses are
+defined at the top of both `compose-medias.yml` and `compose-utils.yml`.
+
+Both files ship with a placeholder in `&lan-address`, which Compose rejects as an invalid IP until
+it is replaced with the server's LAN IP (find it with `hostname -I`). Use the same address in both
+files, for example:
+
+```yaml
+x-loopback-address: &loopback-address 127.0.0.1
+x-lan-address: &lan-address 192.168.1.50
+```
+
+Services can then be reached through Tailscale Serve or directly from the LAN.
+
+Three ports are bound differently on purpose:
+
+| Port | Binding | Why |
+| ---- | ------- | --- |
+| Portainer `9443` | every interface | terminates its own TLS and is not put behind Tailscale Serve, so the tailnet reaches it directly |
+| qBittorrent `6881` | every interface | torrent port, reached by peers on the internet |
+| FlareSolverr `8191` | loopback only | no authentication; Prowlarr uses the Compose network |
 
 ## Network
 
@@ -278,7 +291,8 @@ docker logs -f jellyfin
 
 ## Access
 
-Replace `SERVER_IP` with the local IP address of the Ubuntu Server.
+Replace `SERVER_IP` with the local IP address of the Ubuntu Server. From outside the house, see
+[Remote access](setup/expose/README.md).
 
 ### Media
 
@@ -298,7 +312,8 @@ Portainer      https://SERVER_IP:9443
 Uptime Kuma    http://SERVER_IP:3001
 ```
 
-Portainer also exposes port `9000`, although HTTPS on port `9443` is recommended.
+Portainer is published only over HTTPS on `9443`, with a self-signed certificate; its HTTP port
+`9000` is not published.
 
 ## Portainer
 
