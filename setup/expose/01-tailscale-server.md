@@ -67,32 +67,33 @@ Find your tailnet name at the top of the DNS page in the admin console — it lo
 
 ## 1.5 Reaching the Docker services
 
-The media stack and Uptime Kuma publish their ports on both loopback and the LAN address. Use
-Tailscale Serve to proxy the loopback listener to the tailnet address:
+Docker does not listen on the Tailscale address for most of the stack: the media services and
+Uptime Kuma are bound to loopback and the LAN address only (see
+[Host binding](../../README.md#host-binding)). Joining the tailnet is not enough on its own —
+something on the server has to accept the connection on the tailnet side and hand it to the
+loopback listener. That is `tailscale serve`, set up in [1.6](#16-serve-the-services-over-https).
 
-| Service | Over Tailscale |
-|---|---|
-| Jellyfin | `http://home-server:8096` |
-| qBittorrent | `http://home-server:8080` |
-| Prowlarr | `http://home-server:9696` |
-| Radarr | `http://home-server:7878` |
-| Sonarr | `http://home-server:8989` |
-| Bazarr | `http://home-server:6767` |
-| Portainer | `https://home-server:9443` |
-| Uptime Kuma | `http://home-server:3001` |
+| Service | Listens on the tailnet | Over Tailscale |
+|---|---|---|
+| Jellyfin, qBittorrent, Prowlarr, Radarr, Sonarr, Bazarr, Uptime Kuma | no — loopback + LAN only | through `tailscale serve` ([1.6](#16-serve-the-services-over-https)) |
+| Portainer | yes — every interface | `https://home-server:9443` directly |
 
-These are plain HTTP over the encrypted tunnel, which is fine for a private tailnet. Configure
-the proxy commands in [1.6](#16-https-on-the-existing-ports-optional-but-recommended).
+Until a port is served, `http://home-server:<port>` gets no answer for those services.
+
+The other way in is the subnet router from
+[1.7](#17-optional--subnet-router-for-the-whole-lan): with it, tailnet devices reach the server's
+LAN address, so the LAN URLs (`http://SERVER_IP:<port>`) work from anywhere too.
 
 > The container-to-container hostnames from the setup guide (`radarr`, `qbittorrent`, …) are
 > unrelated to this and keep working exactly as before — they are internal to the Compose
 > network. Tailscale only changes how *you* reach the host.
 
-## 1.6 HTTPS on the existing ports (optional but recommended)
+## 1.6 Serve the services over HTTPS
 
-`tailscale serve` puts a TLS terminator in front of a local port using a real Let's Encrypt
-certificate issued for your `ts.net` name. Browsers stop complaining, and clients that insist on
-HTTPS work properly.
+`tailscale serve` listens on the tailnet address and proxies to a local port, putting a TLS
+terminator in front of it with a real Let's Encrypt certificate issued for your `ts.net` name.
+For the services bound to loopback + LAN, this is what makes them reachable over the tailnet at
+all. Browsers do not complain, and clients that insist on HTTPS work properly.
 
 Left to itself, `serve` takes over port **443**, which would make the bare
 `https://home-server.<tailnet-name>.ts.net` mean Jellyfin. Pass `--https=<port>` explicitly
@@ -112,7 +113,7 @@ sudo tailscale serve --bg --https=6767 http://127.0.0.1:6767   # Bazarr
 sudo tailscale serve --bg --https=3001 http://127.0.0.1:3001   # Uptime Kuma
 ```
 
-Result — same ports as before, now over TLS:
+Result — each service keeps its port number, over TLS:
 
 | Service | Over Tailscale |
 |---|---|
@@ -125,16 +126,17 @@ Result — same ports as before, now over TLS:
 | Uptime Kuma | `https://home-server.<tailnet-name>.ts.net:3001` |
 
 Portainer is left out on purpose: it already terminates its own TLS on `9443`, so putting
-`serve` in front would be TLS inside TLS. Reach it at `https://home-server:9443` as before, or
-proxy its HTTP port if you prefer one consistent scheme.
+`serve` in front would be TLS inside TLS. It listens on every interface, so reach it directly at
+`https://home-server:9443`.
 
 Three consequences worth knowing before you run these:
 
-- **The full name is now mandatory.** The certificate is issued for
+- **The full name is mandatory.** The certificate is issued for
   `home-server.<tailnet-name>.ts.net`, so the MagicDNS short name gives a certificate mismatch
   in the browser. `https://home-server:8096` will not do — use the FQDN.
-- **That port speaks TLS over the tailnet from now on.** Plain `http://home-server:8096` stops
-  working once 8096 is served; it is one port, one protocol.
+- **There is no plain HTTP over the tailnet.** A served port speaks TLS only, and an unserved
+  one has nothing listening on the tailnet address. Old `http://home-server:<port>` bookmarks need
+  the `https://` + full-name form.
 - **LAN access remains direct.** The LAN listener is configured by `&lan-address` in the
   `x-lan-address` configuration at the top of `compose-medias.yml` and `compose-utils.yml`.
 
@@ -199,7 +201,7 @@ authentication in front of a torrent client and full filesystem access. Even for
 means exposing a media server, on your home IP, to the open internet — with all the account
 hygiene, patching and legal exposure that implies.
 
-Funnel also breaks the port scheme from [1.6](#16-https-on-the-existing-ports-optional-but-recommended):
+Funnel also breaks the port scheme from [1.6](#16-serve-the-services-over-https):
 it only accepts **443, 8443 and 10000**, so a funnelled service cannot keep its own port number.
 
 If you do it anyway, enable Funnel for the node in the admin console ACL policy first, then:
