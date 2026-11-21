@@ -104,7 +104,7 @@ Recreate both stacks so the ports bind to it:
 
 ```bash
 docker compose -f compose-medias.yml up -d
-docker compose -f compose-utils.yml up -d
+docker compose -f compose-observability.yml up -d
 ```
 
 ## 7. The server keeps getting another address

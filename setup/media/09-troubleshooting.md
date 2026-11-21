@@ -9,7 +9,7 @@
 | Indexer missing in Radarr after sync | incompatible categories | check the indexer's categories in Prowlarr |
 | Indexer test fails with a Cloudflare / `403` / `503` error | indexer behind Cloudflare | route it through FlareSolverr — [2.3](02-prowlarr-indexers.md#23-flaresolverr-optional) |
 | FlareSolverr configured but the indexer still fails on Cloudflare | indexer missing the `flaresolverr` tag | the indexer and the proxy must share the same tag — [2.3.3](02-prowlarr-indexers.md#233-tag-the-indexers-that-need-it) |
-| Proxy test fails: cannot connect to `flaresolverr` | container moved to `compose-utils.yml`, or not running | it must be in `compose-medias.yml`; check `docker logs flaresolverr` |
+| Proxy test fails: cannot connect to `flaresolverr` | container moved to `compose-observability.yml`, or not running | it must be in `compose-medias.yml`; check `docker logs flaresolverr` |
 | FlareSolverr times out or cannot resolve the site | ISP DNS blocking the domain | confirm the `dns:` entries (`1.1.1.1`, `8.8.8.8`) are in the `flaresolverr` service and recreate it with `up -d` |
 | FlareSolverr times out or "Challenge not detected" after working before | Cloudflare changed its challenge | pull the latest image; raise Request Timeout; interactive captchas are not solvable |
 | Indexer disappeared from Radarr/Sonarr after tagging it | the app in Prowlarr has tags of its own | remove the app's tags, or add `flaresolverr` to the app too |

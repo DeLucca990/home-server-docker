@@ -78,8 +78,8 @@ address points at the container itself, not at the Docker host.
 | Jellyfin | `jellyfin` | 8096 |
 | FlareSolverr *([2.3](02-prowlarr-indexers.md#23-flaresolverr-optional))* | `flaresolverr` | 8191 |
 
-Note that `compose-utils.yml` is a **separate stack with its own network**, so Uptime Kuma must
-monitor these services by `http://SERVER_IP:<port>`, not by service name.
+Note that `compose-observability.yml` is a **separate stack with its own network**, so Uptime
+Kuma must monitor these services by `http://SERVER_IP:<port>`, not by service name.
 
 ## 0.4 Configuration order
 

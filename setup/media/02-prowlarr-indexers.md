@@ -80,7 +80,7 @@ do that only for indexers that actually need it. Typical signs:
 It lives in **`compose-medias.yml`**, in the same file as Prowlarr, so that the `flaresolverr`
 hostname resolves on the Compose network (see
 [0.3](00-before-you-start.md#03-container-to-container-communication)). Moving it to
-`compose-utils.yml` would break that.
+`compose-observability.yml` would break that.
 
 ```yaml
   flaresolverr:

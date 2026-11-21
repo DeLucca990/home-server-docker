@@ -14,7 +14,7 @@
 | [Bazarr](https://www.bazarr.media/)         | Subtitle management and automation  | `6767` |
 | [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | Cloudflare challenge solver for Prowlarr | `8191` (localhost only) |
 
-#### Utils Stack
+#### Observability Stack
 
 | Service                                                | Description                     |   Port |
 | ------------------------------------------------------ | ------------------------------- | -----: |
@@ -27,7 +27,7 @@
 .
 ├── .env.example
 ├── compose-medias.yml
-├── compose-utils.yml
+├── compose-observability.yml
 ├── config/
 │   ├── jellyfin/
 │   ├── qbittorrent/
@@ -141,8 +141,8 @@ See [setup/media/00-before-you-start.md](setup/media/00-before-you-start.md) for
 The Web UIs that sit behind Tailscale Serve — the whole media stack and Uptime Kuma — bind their
 published ports to both loopback and the LAN address, so local clients can connect directly while
 Tailscale Serve uses the loopback listener without conflicting with Docker. The addresses are
-defined at the top of both `compose-medias.yml` and `compose-utils.yml`, with the LAN address
-taken from `LAN_IP` in `.env`:
+defined at the top of both `compose-medias.yml` and `compose-observability.yml`, with the LAN
+address taken from `LAN_IP` in `.env`:
 
 ```yaml
 x-loopback-address: &loopback-address 127.0.0.1
@@ -167,9 +167,10 @@ Three ports are bound differently on purpose:
 ## Network
 
 The two Compose files are independent stacks: the top-level `name:` in each file sets the Compose
-project to `media` and `utils`, so they create separate Docker networks (`media_default` and
-`utils_default`). Without it, both files would take their project name from the same directory and
-end up as a single project, sharing one network and treating each other's containers as orphans.
+project to `media` and `observability`, so they create separate Docker networks (`media_default`
+and `observability_default`). Without it, both files would take their project name from the same
+directory and end up as a single project, sharing one network and treating each other's
+containers as orphans.
 
 Because of this, services from different stacks should not rely on Docker service-name resolution.
 
@@ -209,24 +210,24 @@ Restart the media stack:
 docker compose -f compose-medias.yml restart
 ```
 
-### Utils Stack
+### Observability Stack
 
 Start Portainer and Uptime Kuma:
 
 ```bash
-docker compose -f compose-utils.yml up -d
+docker compose -f compose-observability.yml up -d
 ```
 
-Stop the utils stack:
+Stop the observability stack:
 
 ```bash
-docker compose -f compose-utils.yml down
+docker compose -f compose-observability.yml down
 ```
 
-Restart the utils stack:
+Restart the observability stack:
 
 ```bash
-docker compose -f compose-utils.yml restart
+docker compose -f compose-observability.yml restart
 ```
 
 ## Updating Images
@@ -235,14 +236,14 @@ Pull the latest images:
 
 ```bash
 docker compose -f compose-medias.yml pull
-docker compose -f compose-utils.yml pull
+docker compose -f compose-observability.yml pull
 ```
 
 Recreate containers using the updated images:
 
 ```bash
 docker compose -f compose-medias.yml up -d
-docker compose -f compose-utils.yml up -d
+docker compose -f compose-observability.yml up -d
 ```
 
 Unused images can be removed periodically with:
@@ -264,26 +265,35 @@ after pulling this change:
    docker volume ls --filter name=portainer_data
    ```
 
-2. Stop both stacks under the old project name (`compose` in the example):
+2. Stop both stacks under the old project name (`compose` in the example; if you ran the version
+   that already named the projects, the observability stack shows up as `utils`, its earlier
+   name, and its file was `compose-utils.yml`):
 
    ```bash
    docker compose -p compose -f compose-medias.yml down
-   docker compose -p compose -f compose-utils.yml down
+   docker compose -p compose -f compose-observability.yml down
    ```
 
    The first command may warn that the network is still in use; the second one removes it.
    Configuration under `config/` and the Portainer volume are kept.
 
-3. `compose-utils.yml` expects the volume `compose_portainer_data`. If the volume listed in step 1
-   has another prefix, set `volumes.portainer_data.name` to that name, otherwise Portainer starts
-   with an empty volume.
+3. The Portainer volume is named after the project, `observability_portainer_data`, so the
+   volume listed in step 1 (`compose_portainer_data`, for example) is not reused and Portainer
+   starts with an empty one. To keep the old data, point the volume at it in
+   `compose-observability.yml` before starting:
+
+   ```yaml
+   volumes:
+     portainer_data:
+       name: compose_portainer_data   # the name listed in step 1
+   ```
 
 4. Start both stacks again:
 
    ```bash
    docker compose -f compose-medias.yml up -d
-   docker compose -f compose-utils.yml up -d
-   docker compose ls   # should list "media" and "utils"
+   docker compose -f compose-observability.yml up -d
+   docker compose ls   # should list "media" and "observability"
    ```
 
 Uptime Kuma monitors that used service names such as `http://jellyfin:8096` only worked because of
@@ -331,7 +341,7 @@ Sonarr         http://SERVER_IP:8989
 Bazarr         http://SERVER_IP:6767
 ```
 
-### Utils
+### Observability
 
 ```text
 Portainer      https://SERVER_IP:9443

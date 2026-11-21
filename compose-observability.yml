@@ -1,4 +1,4 @@
-name: utils
+name: observability
 
 x-loopback-address: &loopback-address 127.0.0.1
 x-lan-address: &lan-address ${LAN_IP:?set LAN_IP in .env - see .env.example}
