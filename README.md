@@ -37,6 +37,7 @@
 │   ├── bazarr/
 │   └── uptime-kuma/
 └── setup/
+    ├── network/       # fixed LAN IP through a DHCP reservation
     ├── media/         # first-run configuration of each Web UI
     └── expose/        # remote access through Tailscale
 ```
@@ -66,23 +67,30 @@ chmod -R 775 /home/ubuntu/media
 
 ## Environment Variables
 
-`compose-medias.yml` reads these variables, with defaults that match the paths used throughout
-this README:
+The Compose files read these variables from `.env`. Only `LAN_IP` is required; the others have
+defaults that match the paths used throughout this README:
 
 | Variable | Default | Used for |
 | -------- | ------- | -------- |
+| `LAN_IP` | — (required, both stacks) | the server's LAN address the Web UIs are published on — see [Host binding](#host-binding) |
 | `PUID` / `PGID` | `1000` | user and group the LinuxServer containers run as |
 | `TZ` | `America/Sao_Paulo` | container time zone |
 | `MEDIA_ROOT` | `/home/ubuntu/media` | host path of the media tree |
 
-To change any of them, copy `.env.example` to `.env` next to the Compose files and edit it;
-Compose loads `.env` automatically. Without `.env`, the defaults apply. If you change `PUID`,
-`PGID` or `MEDIA_ROOT`, adjust the `mkdir` and `chown` commands above to match.
+Before the first start, copy `.env.example` to `.env` next to the Compose files and set
+`LAN_IP`; Compose loads `.env` automatically and refuses to start either stack while `LAN_IP` is
+empty. If you change `PUID`, `PGID` or `MEDIA_ROOT`, adjust the `mkdir` and `chown` commands above
+to match.
+
+```bash
+cp .env.example .env
+```
 
 ## Setup Guides
 
 | Guide | Covers |
 | ----- | ------ |
+| [Fixed LAN IP](setup/network/README.md) | Keeping the server's address fixed with a DHCP reservation on the router — do this before setting `LAN_IP` |
 | [Media stack setup](setup/media/README.md) | First-run configuration of qBittorrent, Prowlarr, Radarr, Sonarr, Bazarr and Jellyfin, in order |
 | [Remote access](setup/expose/README.md) | Reaching the server from outside the house through Tailscale, over HTTPS |
 
@@ -133,16 +141,18 @@ See [setup/media/00-before-you-start.md](setup/media/00-before-you-start.md) for
 The Web UIs that sit behind Tailscale Serve — the whole media stack and Uptime Kuma — bind their
 published ports to both loopback and the LAN address, so local clients can connect directly while
 Tailscale Serve uses the loopback listener without conflicting with Docker. The addresses are
-defined at the top of both `compose-medias.yml` and `compose-utils.yml`.
-
-Both files ship with a placeholder in `&lan-address`, which Compose rejects as an invalid IP until
-it is replaced with the server's LAN IP (find it with `hostname -I`). Use the same address in both
-files, for example:
+defined at the top of both `compose-medias.yml` and `compose-utils.yml`, with the LAN address
+taken from `LAN_IP` in `.env`:
 
 ```yaml
 x-loopback-address: &loopback-address 127.0.0.1
-x-lan-address: &lan-address 192.168.1.50
+x-lan-address: &lan-address ${LAN_IP:?set LAN_IP in .env - see .env.example}
 ```
+
+Docker can only bind to an address the server actually has: if the router hands the server a
+different IP, every container with a LAN port fails to start with `cannot assign requested
+address`. Keep the address fixed with a DHCP reservation —
+[setup/network](setup/network/README.md) walks through it.
 
 Services can then be reached through Tailscale Serve or directly from the LAN.
 
@@ -307,7 +317,7 @@ docker logs -f jellyfin
 
 ## Access
 
-Replace `SERVER_IP` with the local IP address of the Ubuntu Server. From outside the house, see
+Replace `SERVER_IP` with the local IP address of the Ubuntu Server (`LAN_IP` in `.env`). From outside the house, see
 [Remote access](setup/expose/README.md).
 
 ### Media

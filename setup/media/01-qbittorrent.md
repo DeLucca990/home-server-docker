@@ -103,7 +103,8 @@ working if the server's LAN IP changes.
 
 Without an open listening port you only make outbound connections, which hurts speed
 considerably. Publishing it on the host is only half of it: peers outside your network get in only
-if the router forwards `6881` (TCP and UDP) to the server's LAN IP.
+if the router forwards `6881` (TCP and UDP) to the server's LAN IP — keep that address fixed with
+a [DHCP reservation](../network/README.md), or the forward breaks when it changes.
 
 ---
 

@@ -137,8 +137,8 @@ Three consequences worth knowing before you run these:
 - **There is no plain HTTP over the tailnet.** A served port speaks TLS only, and an unserved
   one has nothing listening on the tailnet address. Old `http://home-server:<port>` bookmarks need
   the `https://` + full-name form.
-- **LAN access remains direct.** The LAN listener is configured by `&lan-address` in the
-  `x-lan-address` configuration at the top of `compose-medias.yml` and `compose-utils.yml`.
+- **LAN access remains direct.** The LAN listener is the address set as `LAN_IP` in `.env`
+  (see [Host binding](../../README.md#host-binding)).
 
 Managing it:
 

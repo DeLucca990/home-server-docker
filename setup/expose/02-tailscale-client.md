@@ -127,7 +127,7 @@ While an exit node is selected, *all* of that device's traffic goes through your
 | Certificate warning on `https://home-server:8096` | the cert is issued for the full `ts.net` name | use `https://home-server.<tailnet>.ts.net:8096` |
 | `http://home-server:<port>` gets no answer | Docker listens only on loopback and the LAN address; only `tailscale serve` answers on the tailnet | run the serve commands from [1.6](01-tailscale-server.md#16-serve-the-services-over-https) and use `https://` + the full name |
 | Jellyfin logs every user as `127.0.0.1` | `tailscale serve` is the proxy | add `127.0.0.1` to Jellyfin's Known proxies ([1.6](01-tailscale-server.md#16-serve-the-services-over-https)) |
-| Can reach the server, but not from a TV app | the TV cannot run Tailscale | use the server's LAN address, or update `&lan-address` in `compose-medias.yml` |
+| Can reach the server, but not from a TV app | the TV cannot run Tailscale | use the server's LAN address, and check that it matches `LAN_IP` in `.env` ([fixed LAN IP](../network/README.md)) |
 | Two VPNs fighting on mobile | the OS allows one VPN profile at a time | disconnect the other one |
 
 ---

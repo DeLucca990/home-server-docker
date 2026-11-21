@@ -1,7 +1,7 @@
 name: utils
 
 x-loopback-address: &loopback-address 127.0.0.1
-x-lan-address: &lan-address your.lan.ip.address (access running "ifconfig" command)
+x-lan-address: &lan-address ${LAN_IP:?set LAN_IP in .env - see .env.example}
 
 x-common: &common
   restart: unless-stopped
