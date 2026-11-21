@@ -93,7 +93,9 @@ hostname resolves on the Compose network (see
       - 1.1.1.1
       - 8.8.8.8
     ports:
-      - 8191:8191
+      - host_ip: *loopback-address
+        published: "8191"
+        target: 8191
     restart: unless-stopped
 ```
 
@@ -102,7 +104,8 @@ as fallback, instead of the host's resolver — which is usually the ISP's DNS v
 ISP resolvers commonly block or hijack torrent sites, and a blocked lookup surfaces as a
 FlareSolverr timeout or a generic connection error rather than a clear DNS failure.
 
-The port is published on `127.0.0.1` only. Prowlarr reaches FlareSolverr over the Compose network
+The port is published on `127.0.0.1` only (`*loopback-address`, defined at the top of
+`compose-medias.yml`). Prowlarr reaches FlareSolverr over the Compose network
 and does not need it published at all; the localhost binding exists just so you can test it from
 the server itself. FlareSolverr has **no authentication**, so do not expose it to the LAN or the
 tailnet.
