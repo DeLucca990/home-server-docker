@@ -1,5 +1,8 @@
 name: utils
 
+x-loopback-address: &loopback-address 127.0.0.1
+x-lan-address: &lan-address your.lan.ip.address (access running "ifconfig" command)
+
 services:
   portainer:
     image: portainer/portainer-ce:latest
@@ -17,7 +20,12 @@ services:
     volumes:
       - ./config/uptime-kuma:/app/data
     ports:
-      - 3001:3001
+      - host_ip: *loopback-address
+        published: "3001"
+        target: 3001
+      - host_ip: *lan-address
+        published: "3001"
+        target: 3001
     restart: unless-stopped
 
 volumes:

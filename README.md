@@ -87,17 +87,26 @@ Both paths reference the same physical file through a hardlink.
 
 ## Host binding
 
-The media stack binds its published ports to both loopback and the LAN address, so local clients
-can connect directly while Tailscale Serve uses the loopback listener without conflicting with
-Docker. The addresses are defined once at the top of `compose-medias.yml`:
+The Web UIs that sit behind Tailscale Serve — the whole media stack and Uptime Kuma — bind their
+published ports to both loopback and the LAN address, so local clients can connect directly while
+Tailscale Serve uses the loopback listener without conflicting with Docker. The addresses are
+defined at the top of both `compose-medias.yml` and `compose-utils.yml`:
 
 ```yaml
 x-loopback-address: &loopback-address 127.0.0.1
 x-lan-address: &lan-address 192.168.1.50
 ```
 
-Change `&lan-address` to the server's actual LAN IP. Services can then be reached through
-Tailscale Serve or directly from the LAN.
+Change `&lan-address` to the server's actual LAN IP in both files. Services can then be reached
+through Tailscale Serve or directly from the LAN.
+
+Three ports are bound differently on purpose:
+
+| Port | Binding | Why |
+| ---- | ------- | --- |
+| Portainer `9443` | every interface | terminates its own TLS and is not put behind Tailscale Serve, so the tailnet reaches it directly |
+| qBittorrent `6881` | every interface | torrent port, reached by peers on the internet |
+| FlareSolverr `8191` | loopback only | no authentication; Prowlarr uses the Compose network |
 
 ### Root Folders
 

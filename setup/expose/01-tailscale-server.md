@@ -1,7 +1,7 @@
 # 1. Tailscale on the Server
 
-Ubuntu Server, alongside the running Docker stacks. The media stack binds its published ports to
-loopback so it can coexist with Tailscale Serve.
+Ubuntu Server, alongside the running Docker stacks. The media stack and Uptime Kuma bind their
+published ports to loopback so they can coexist with Tailscale Serve.
 
 ---
 
@@ -67,8 +67,8 @@ Find your tailnet name at the top of the DNS page in the admin console — it lo
 
 ## 1.5 Reaching the Docker services
 
-The media stack publishes its ports on both loopback and the LAN address. Use Tailscale Serve to
-proxy the loopback listener to the tailnet address:
+The media stack and Uptime Kuma publish their ports on both loopback and the LAN address. Use
+Tailscale Serve to proxy the loopback listener to the tailnet address:
 
 | Service | Over Tailscale |
 |---|---|
@@ -136,7 +136,7 @@ Three consequences worth knowing before you run these:
 - **That port speaks TLS over the tailnet from now on.** Plain `http://home-server:8096` stops
   working once 8096 is served; it is one port, one protocol.
 - **LAN access remains direct.** The LAN listener is configured by `&lan-address` in the
-  `x-lan-address` configuration at the top of `compose-medias.yml`.
+  `x-lan-address` configuration at the top of `compose-medias.yml` and `compose-utils.yml`.
 
 Managing it:
 
