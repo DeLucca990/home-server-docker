@@ -97,8 +97,14 @@ on its own, the `*arr` app loses track of it.
 `compose-medias.yml` already publishes `6881` (TCP and UDP) and sets `TORRENTING_PORT=6881`.
 Confirm the Web UI agrees: `Options → Connection → Port used for incoming connections` = `6881`.
 
+Unlike the Web UI ports, `6881` is published on every interface instead of loopback + LAN: it is
+meant to be reached by peers on the internet, it is never put behind `tailscale serve`, and it keeps
+working if the server's LAN IP changes.
+
 Without an open listening port you only make outbound connections, which hurts speed
-considerably.
+considerably. Publishing it on the host is only half of it: peers outside your network get in only
+if the router forwards `6881` (TCP and UDP) to the server's LAN IP — keep that address fixed with
+a [DHCP reservation](../network/README.md), or the forward breaks when it changes.
 
 ---
 

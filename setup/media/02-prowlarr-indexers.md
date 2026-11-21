@@ -80,29 +80,38 @@ do that only for indexers that actually need it. Typical signs:
 It lives in **`compose-medias.yml`**, in the same file as Prowlarr, so that the `flaresolverr`
 hostname resolves on the Compose network (see
 [0.3](00-before-you-start.md#03-container-to-container-communication)). Moving it to
-`compose-utils.yml` would break that.
+`compose-observability.yml` would break that.
 
 ```yaml
   flaresolverr:
+    <<: *common
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     environment:
-      - LOG_LEVEL=info
-      - TZ=America/Sao_Paulo
+      LOG_LEVEL: info
+      TZ: ${TZ:-America/Sao_Paulo}
+    ports:
+      - host_ip: *loopback-address
+        published: "8191"
+        target: 8191
     dns:
       - 1.1.1.1
       - 8.8.8.8
-    ports:
-      - 8191:8191
-    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8191/health"]
 ```
+
+`*common` (restart policy) and `*healthcheck` (check timings) are shared blocks defined at the
+top of the file.
 
 `dns` makes the container resolve names through Cloudflare (`1.1.1.1`) with Google (`8.8.8.8`)
 as fallback, instead of the host's resolver — which is usually the ISP's DNS via the router.
 ISP resolvers commonly block or hijack torrent sites, and a blocked lookup surfaces as a
 FlareSolverr timeout or a generic connection error rather than a clear DNS failure.
 
-The port is published on `127.0.0.1` only. Prowlarr reaches FlareSolverr over the Compose network
+The port is published on `127.0.0.1` only (`*loopback-address`, defined at the top of
+`compose-medias.yml`). Prowlarr reaches FlareSolverr over the Compose network
 and does not need it published at all; the localhost binding exists just so you can test it from
 the server itself. FlareSolverr has **no authentication**, so do not expose it to the LAN or the
 tailnet.

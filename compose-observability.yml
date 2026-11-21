@@ -1,5 +1,14 @@
+name: observability
+
+x-loopback-address: &loopback-address 127.0.0.1
+x-lan-address: &lan-address ${LAN_IP:?set LAN_IP in .env - see .env.example}
+
+x-common: &common
+  restart: unless-stopped
+
 services:
   portainer:
+    <<: *common
     image: portainer/portainer-ce:latest
     container_name: portainer
     ports:
@@ -7,16 +16,20 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
-    restart: unless-stopped
 
   uptime-kuma:
+    <<: *common
     image: louislam/uptime-kuma:latest
     container_name: uptime-kuma
     volumes:
       - ./config/uptime-kuma:/app/data
     ports:
-      - 3001:3001
-    restart: unless-stopped
+      - host_ip: *loopback-address
+        published: "3001"
+        target: 3001
+      - host_ip: *lan-address
+        published: "3001"
+        target: 3001
 
 volumes:
   portainer_data:
