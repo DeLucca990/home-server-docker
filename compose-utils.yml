@@ -1,3 +1,5 @@
+name: utils
+
 services:
   portainer:
     image: portainer/portainer-ce:latest

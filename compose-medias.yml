@@ -1,3 +1,5 @@
+name: media
+
 x-loopback-address: &loopback-address 127.0.0.1
 x-lan-address: &lan-address your.lan.ip.address (access running "ifconfig" command)
 

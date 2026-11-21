@@ -118,7 +118,10 @@ See [setup/media/00-before-you-start.md](setup/media/00-before-you-start.md) for
 
 ## Network
 
-The two Compose files are independent stacks and therefore create separate Docker networks.
+The two Compose files are independent stacks: the top-level `name:` in each file sets the Compose
+project to `media` and `utils`, so they create separate Docker networks (`media_default` and
+`utils_default`). Without it, both files would take their project name from the same directory and
+end up as a single project, sharing one network and treating each other's containers as orphans.
 
 Because of this, services from different stacks should not rely on Docker service-name resolution.
 
@@ -199,6 +202,44 @@ Unused images can be removed periodically with:
 ```bash
 docker image prune
 ```
+
+## Migrating to Named Projects
+
+Earlier versions of this repository did not set `name:` in the Compose files, so both stacks ran
+as one project named after the directory. Containers created that way have to be recreated once
+after pulling this change:
+
+1. Find the old project name and the Portainer volume:
+
+   ```bash
+   docker compose ls
+   docker volume ls --filter name=portainer_data
+   ```
+
+2. Stop both stacks under the old project name (`compose` in the example):
+
+   ```bash
+   docker compose -p compose -f compose-medias.yml down
+   docker compose -p compose -f compose-utils.yml down
+   ```
+
+   The first command may warn that the network is still in use; the second one removes it.
+   Configuration under `config/` and the Portainer volume are kept.
+
+3. `compose-utils.yml` expects the volume `compose_portainer_data`. If the volume listed in step 1
+   has another prefix, set `volumes.portainer_data.name` to that name, otherwise Portainer starts
+   with an empty volume.
+
+4. Start both stacks again:
+
+   ```bash
+   docker compose -f compose-medias.yml up -d
+   docker compose -f compose-utils.yml up -d
+   docker compose ls   # should list "media" and "utils"
+   ```
+
+Uptime Kuma monitors that used service names such as `http://jellyfin:8096` only worked because of
+the shared network; switch them to `http://SERVER_IP:<port>`.
 
 ## Checking Container Status
 
